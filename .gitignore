@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.local
+.claude
+PRODUCT.md
+DESIGN.md
+.impeccable
