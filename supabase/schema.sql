@@ -214,3 +214,14 @@ revoke execute on function novo_usuario() from public, anon, authenticated;
 
 create trigger ao_criar_usuario after insert on auth.users
   for each row execute function novo_usuario();
+
+-- Bot do Telegram: liga cada ID do Telegram a uma conta. Só a função do bot acessa, com a chave de serviço.
+create table telegram_usuarios (
+  telegram_id bigint primary key,
+  dono uuid not null unique references auth.users (id) on delete cascade,
+  criado_em timestamptz not null default now()
+);
+alter table telegram_usuarios enable row level security;
+revoke all on telegram_usuarios from anon, authenticated;
+grant select on telegram_usuarios, cartoes, contas, categorias to service_role;
+grant select, insert, delete on lancamentos to service_role;
