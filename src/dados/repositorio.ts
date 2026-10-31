@@ -24,6 +24,10 @@ export interface Repositorio {
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const chave = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 export const temNuvem = !!url && !!chave
+// Lido antes de criar o cliente, que limpa o endereço ao processar o link do e-mail.
+export const veioDeRecuperacao = location.hash.includes('type=recovery')
+export const linkVencido = /[#&]error(_code)?=/.test(location.hash)
+if (linkVencido) history.replaceState(null, '', location.pathname + location.search)
 export const supabase: SupabaseClient | null = temNuvem ? createClient(url!, chave!) : null
 
 const TABELAS: Tabela[] = ['contas', 'categorias', 'cartoes', 'contas_fixas', 'metas', 'lancamentos', 'orcamentos', 'investimentos']

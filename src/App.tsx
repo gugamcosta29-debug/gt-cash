@@ -4,7 +4,7 @@ import {
   CalendarCheck, CreditCard, Gauge, Landmark, ListOrdered, Menu, PieChart, Plus, Settings, Target,
 } from 'lucide-react'
 import { ProvedorApp, useApp, type Visao } from './dados/contexto'
-import { repositorioExemplo, repositorioNuvem, supabase, temNuvem, type Repositorio } from './dados/repositorio'
+import { linkVencido, repositorioExemplo, repositorioNuvem, supabase, temNuvem, veioDeRecuperacao, type Repositorio } from './dados/repositorio'
 import { Gaveta } from './componentes/base'
 import { Marca } from './componentes/Marca'
 import { Painel } from './telas/Painel'
@@ -15,7 +15,7 @@ import { Orcamento } from './telas/Orcamento'
 import { Metas } from './telas/Metas'
 import { Investimentos } from './telas/Investimentos'
 import { Ajustes } from './telas/Ajustes'
-import { Entrar } from './telas/Entrar'
+import { Entrar, NovaSenha } from './telas/Entrar'
 
 const TELAS = [
   { id: 'painel', nome: 'Painel', icone: Gauge },
@@ -136,11 +136,15 @@ export function App() {
   const [sessao, setSessao] = useState<Session | null>(null)
   const [pronta, setPronta] = useState(!temNuvem)
   const [exemplo, setExemplo] = useState(!temNuvem || new URLSearchParams(location.search).has('exemplo'))
+  const [recuperando, setRecuperando] = useState(veioDeRecuperacao)
 
   useEffect(() => {
     if (!supabase) return
     supabase.auth.getSession().then(({ data }) => { setSessao(data.session); setPronta(true) })
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSessao(s))
+    const { data } = supabase.auth.onAuthStateChange((e, s) => {
+      if (e === 'PASSWORD_RECOVERY') setRecuperando(true)
+      setSessao(s)
+    })
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -151,7 +155,8 @@ export function App() {
   }, [exemplo, usuario])
 
   if (!pronta) return <Carregando texto="Abrindo…" />
-  if (!repo) return <Entrar aoVerExemplo={() => setExemplo(true)} />
+  if (recuperando && sessao) return <NovaSenha aoConcluir={() => setRecuperando(false)} />
+  if (!repo) return <Entrar aoVerExemplo={() => setExemplo(true)} linkInvalido={linkVencido || recuperando} />
   return (
     <ProvedorApp
       key={repo.usuarioId}
